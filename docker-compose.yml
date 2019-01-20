@@ -1,0 +1,45 @@
+version: '2'
+services:
+  nginx:
+    image: nginx:alpine
+    volumes:
+    - ./data:/data
+    - ./nginx.conf:/etc/nginx/nginx.conf
+    - ./default.conf:/etc/nginx/conf.d/default.conf
+    links:
+    - phpfpm-lb:phpfpm
+    labels:
+      io.rancher.container.pull_image: always
+  phpfpm:
+    image: php:7.1-fpm-alpine
+    volumes:
+    - ./data:/data
+    links:
+    - mysql:mysql
+    labels:
+      io.rancher.container.pull_image: always
+  phpfpm-lb:
+    image: rancher/lb-service-haproxy:latest
+    expose:
+    - 9000:9000/tcp
+    labels:
+      io.rancher.container.agent.role: environmentAdmin
+      io.rancher.container.create_agent: 'true'
+  mysql:
+    image: yobasystems/alpine-mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: test
+      MYSQL_DATABASE: test
+    labels:
+      io.rancher.container.pull_image: always
+  nginx-lb:
+    image: rancher/lb-service-haproxy:latest
+    ports:
+    - 85:85/tcp
+    labels:
+      io.rancher.container.agent.role: environmentAdmin
+      io.rancher.container.create_agent: 'true'
+  redis:
+    image: redis:alpine
+    labels:
+      io.rancher.container.pull_image: always
